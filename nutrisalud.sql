@@ -68,4 +68,4 @@ INSERT INTO empresa (razon_social, ruc, sector, correo_contacto) VALUES
 ('Minera Las Bambas', '20504532109', 'Minería', 'rrhh@bambas.com'),
 ('Constructora Graña', '20100070970', 'Construcción', 'seguridad@grana.com');
 
-select * from usuario;
+select * from trabajador;
