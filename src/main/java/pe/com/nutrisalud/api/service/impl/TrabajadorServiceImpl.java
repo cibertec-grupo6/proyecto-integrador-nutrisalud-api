@@ -36,7 +36,7 @@ public class TrabajadorServiceImpl implements ITrabajadorService {
         Trabajador trabajador = Trabajador.builder()
                 .nombres(trabajadorRequest.getNombres())
                 .apellidos(trabajadorRequest.getApellidos())
-                .tipoDocumento(trabajadorRequest.getTipoDocumento() != null ? trabajadorRequest.getTipoDocumento() : "DNI")
+                .tipoDocumento(trabajadorRequest.getTipoDocumento())
                 .documentoIdentidad(trabajadorRequest.getDocumentoIdentidad())
                 .correo(trabajadorRequest.getCorreo())
                 .cargo(trabajadorRequest.getCargo())

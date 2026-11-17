@@ -20,24 +20,26 @@ public class EmpresaController {
     private final IEmpresaService empresaService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')") // Solo el admin puede crear empresas
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENFERMERA')")
     public ResponseEntity<EmpresaResponse> crearEmpresa(@Valid @RequestBody EmpresaRequest request) {
         EmpresaResponse nuevaEmpresa = empresaService.crearEmpresa(request);
         return new ResponseEntity<>(nuevaEmpresa, HttpStatus.CREATED);
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<EmpresaResponse>> listarEmpresas() {
         return ResponseEntity.ok(empresaService.listarEmpresas());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<EmpresaResponse> obtenerEmpresaPorId(@PathVariable Long id) {
         return ResponseEntity.ok(empresaService.obtenerEmpresaPorId(id));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')") // Solo el admin puede actualizar
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENFERMERA')")
     public ResponseEntity<EmpresaResponse> actualizarEmpresa(
             @PathVariable Long id,
             @Valid @RequestBody EmpresaRequest request) {

@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import pe.com.nutrisalud.api.model.enums.Rol;
 
 @Getter @Setter
@@ -47,14 +48,9 @@ public class Usuario {
 	
 	@Column(nullable = false)
 	private Boolean activo;
-	
+
+	@CreationTimestamp
 	@Column(name = "fecha_creacion", updatable = false)
 	private LocalDateTime fechaCreacion;
-	
-	protected void onCreate() {
-		this.fechaCreacion = LocalDateTime.now();
-		if(this.fechaCreacion == null) {
-			this.activo = true;
-		}
-	}
+
 }

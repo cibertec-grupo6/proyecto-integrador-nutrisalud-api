@@ -22,24 +22,26 @@ public class TrabajadorController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUADOR_SALUD')") // Admin o Evaluador pueden registrar
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENFERMERA')")
     public ResponseEntity<TrabajadorResponse> crearTrabajador(@Valid @RequestBody TrabajadorRequest request) {
         TrabajadorResponse nuevoTrabajador = trabajadorService.crearTrabajador(request);
         return new ResponseEntity<>(nuevoTrabajador, HttpStatus.CREATED);
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TrabajadorResponse>> listarTrabajadores() {
         return ResponseEntity.ok(trabajadorService.listarTrabajadores());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TrabajadorResponse> obtenerTrabajadorPorId(@PathVariable Long id) {
         return ResponseEntity.ok(trabajadorService.obtenerTrabajadorPorId(id));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUADOR_SALUD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENFERMERA')")
     public ResponseEntity<TrabajadorResponse> actualizarTrabajador(
             @PathVariable Long id,
             @Valid @RequestBody TrabajadorRequest request) {

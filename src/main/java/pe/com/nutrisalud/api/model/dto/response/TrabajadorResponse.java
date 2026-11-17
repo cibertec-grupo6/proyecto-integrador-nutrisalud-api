@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pe.com.nutrisalud.api.model.enums.TipoDocumento;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +16,7 @@ public class TrabajadorResponse {
     private Long id;
     private String nombres;
     private String apellidos;
-    private String tipoDocumento;
+    private TipoDocumento tipoDocumento;
     private String documentoIdentidad;
     private String correo;
     private String cargo;

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
+import pe.com.nutrisalud.api.model.enums.TipoDocumento;
 
 @Data
 public class TrabajadorRequest {
@@ -14,7 +15,7 @@ public class TrabajadorRequest {
     @NotBlank(message = "Los apellidos son obligatorios")
     private String apellidos;
 
-    private String tipoDocumento;
+    private TipoDocumento tipoDocumento;
 
     @NotBlank(message = "El documento de identidad es obligatorio")
     @Pattern(regexp = "^[0-9]{8,15}$", message = "El documento debe contener solo números (8 a 15 dígitos)")
