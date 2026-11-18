@@ -3,8 +3,13 @@ drop database nutrisalud_db;
 CREATE DATABASE IF NOT EXISTS nutrisalud_db;
 USE nutrisalud_db;
 
--- 2. Tabla de Usuarios (Para HU13 - Autenticación y Roles)
--- Roles: ADMIN, EVALUADOR_SALUD, EVALUADOR_FISICO, MEDICO
+
+CREATE TABLE cargo (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion VARCHAR(255)
+);
+
 CREATE TABLE usuario (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     nombres VARCHAR(100) NOT NULL,
@@ -16,7 +21,7 @@ CREATE TABLE usuario (
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Tabla de Empresas Clientas (Para HU12)
+
 CREATE TABLE empresa (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     razon_social VARCHAR(150) NOT NULL,
@@ -28,8 +33,7 @@ CREATE TABLE empresa (
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. Tabla de Trabajadores (Para HU01)
--- Son los empleados de las empresas clientas que vienen al EMO
+
 CREATE TABLE trabajador (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     nombres VARCHAR(100) NOT NULL,
@@ -44,7 +48,7 @@ CREATE TABLE trabajador (
     FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 );
 
--- 5. Tabla de Evaluaciones IMC (Para HU02 y HU03)
+
 CREATE TABLE evaluacion_imc (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     trabajador_id BIGINT NOT NULL,
@@ -58,15 +62,26 @@ CREATE TABLE evaluacion_imc (
     FOREIGN KEY (trabajador_id) REFERENCES trabajador(id),
     FOREIGN KEY (evaluador_id) REFERENCES usuario(id)
 );
+CREATE TABLE IF NOT EXISTS evaluacion_salto (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    trabajador_id BIGINT NOT NULL,
+    alcance_reposo_cm DECIMAL(5,2) NOT NULL,
+    alcance_salto_cm DECIMAL(5,2) NOT NULL,
+    altura_salto_cm DECIMAL(5,2) NOT NULL, -- Calculado: alcance_salto - alcance_reposo
+    clasificacion_rendimiento VARCHAR(20) NOT NULL, -- DEFICIENTE, REGULAR, BUENO, MUY_BUENO, EXCELENTE
+    estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE', -- PENDIENTE, APROBADO
+    fecha_evaluacion DATE NOT NULL,
+    evaluador_id BIGINT,
+    fecha_registro DATE DEFAULT (CURRENT_DATE),
+    CONSTRAINT fk_salto_trabajador 
+        FOREIGN KEY (trabajador_id) 
+        REFERENCES trabajador(id) 
+        ON DELETE CASCADE,
+    CONSTRAINT fk_salto_evaluador 
+        FOREIGN KEY (evaluador_id) 
+        REFERENCES usuario(id) 
+        ON DELETE SET NULL
+);
 
--- 6. Datos de prueba (Opcional, para que puedas probar el login y las empresas)
--- Contraseña: 123456 (Hash BCrypt para Spring Security)
-INSERT INTO usuario (nombres, apellidos, correo, password, rol) VALUES 
-('Roger', 'Admin', 'admin@nutrisalud.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN');
 
-INSERT INTO empresa (razon_social, ruc, sector, correo_contacto) VALUES 
-('Minera Las Bambas', '20504532109', 'Minería', 'rrhh@bambas.com'),
-('Constructora Graña', '20100070970', 'Construcción', 'seguridad@grana.com');
-
-
-select * from evaluacion_imc;
+select * from evaluacion_salto;
