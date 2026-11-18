@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 import pe.com.nutrisalud.api.exception.ResourceNotFoundException;
 import pe.com.nutrisalud.api.model.dto.request.UsuarioRequest;
 import pe.com.nutrisalud.api.model.dto.response.UsuarioResponse;
+import pe.com.nutrisalud.api.model.entity.Cargo;
 import pe.com.nutrisalud.api.model.entity.Usuario;
+import pe.com.nutrisalud.api.repository.ICargoRepository;
 import pe.com.nutrisalud.api.repository.IUsuarioRepository;
 import pe.com.nutrisalud.api.service.IUsuarioService;
 
@@ -21,6 +23,8 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	private final IUsuarioRepository usuarioRepo;
 	
 	private final PasswordEncoder passwordEncoder;
+
+	private final ICargoRepository cargoRepo;
 	
 	@Override
 	public void cambiarMiPassword(String correo, String passwordActual, String passwordNueva) {
@@ -59,6 +63,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
 				? request.getPassword()
 				: "NutriSalud2026*"; // Contraseña por defecto segura
 
+		Cargo cargo = cargoRepo.findById(request.getCargoId())
+				.orElseThrow(() -> new ResourceNotFoundException("Cargo no encontrado con ID: " + request.getCargoId()));
+
 		// 3. Crear y guardar
 		Usuario nuevoUsuario = Usuario.builder()
 				.nombres(request.getNombres())
@@ -66,6 +73,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 				.correo(request.getCorreo())
 				.password(passwordEncoder.encode(passwordFinal))
 				.rol(request.getRol())
+				.cargo(cargo)
 				.activo(true) // Por defecto se crea activo
 				.build();
 
@@ -102,6 +110,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 				.correo(usuario.getCorreo())
 				.rol(usuario.getRol())
 				.activo(usuario.getActivo())
+				.nombreCargo(usuario.getCargo().getNombre())
 				.fechaCreacion(usuario.getFechaCreacion())
 				.build();
 	}

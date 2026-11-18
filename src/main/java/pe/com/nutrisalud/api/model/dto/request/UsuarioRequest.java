@@ -24,4 +24,7 @@ public class UsuarioRequest {
 
     // Opcional: Si no se envia el sistema asignara uan por defecto
     private String password;
+
+    @NotNull(message = "El cargo es obligatorio")
+    private Long cargoId;
 }

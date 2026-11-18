@@ -23,5 +23,7 @@ public class EvaluacionIMCResponse {
     private ClasificacionIMC clasificacion;
     private LocalDate fechaEvaluacion;
     private EstadoEvaluacion estado;
+    private String tipoEvaluacion;
     private String nombreEvaluador;
+    private String cargoEvaluador;
 }

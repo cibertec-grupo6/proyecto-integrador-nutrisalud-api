@@ -10,6 +10,7 @@ import pe.com.nutrisalud.api.model.entity.Trabajador;
 import pe.com.nutrisalud.api.model.entity.Usuario;
 import pe.com.nutrisalud.api.model.enums.ClasificacionIMC;
 import pe.com.nutrisalud.api.model.enums.EstadoEvaluacion;
+import pe.com.nutrisalud.api.model.enums.Rol;
 import pe.com.nutrisalud.api.repository.IEvaluacionIMCRepository;
 import pe.com.nutrisalud.api.repository.ITrabajadorRepository;
 import pe.com.nutrisalud.api.repository.IUsuarioRepository;
@@ -59,6 +60,32 @@ public class EvaluacionIMCServiceImpl implements IEvaluacionIMCService {
         return mapToResponse(evaluacionGuardada);
     }
 
+    @Override
+    public EvaluacionIMCResponse aprobarEvaluacion(Long evaluacionId, String correoMedico) {
+        // 1. Buscar la evaluación
+        EvaluacionIMC evaluacion = evaluacionIMCRepo.findById(evaluacionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evaluación no encontrada con ID: " + evaluacionId));
+
+        // 2. Validar que el usuario que aprueba sea un MÉDICO (Seguridad a nivel de negocio)
+        Usuario medico = usuarioRepo.findByCorreo(correoMedico)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        if (medico.getRol() != Rol.MEDICO) {
+            throw new IllegalStateException("Solo un usuario con rol MÉDICO puede aprobar evaluaciones.");
+        }
+
+        // 3. Cambiar el estado a APROBADO
+        evaluacion.setEstado(EstadoEvaluacion.APROBADO);
+
+        // 4. Guardar los cambios
+        EvaluacionIMC evaluacionAprobada = evaluacionIMCRepo.save(evaluacion);
+
+        // TODO (Sprint 2): Aquí irá el disparador del servicio de envío de correos
+        // emailService.enviarResultadoIMC(evaluacionAprobada);
+
+        return mapToResponse(evaluacionAprobada);
+    }
+
 
     //Metodo Auxiliar
     private EvaluacionIMCResponse mapToResponse(EvaluacionIMC evaluacion){
@@ -72,6 +99,7 @@ public class EvaluacionIMCServiceImpl implements IEvaluacionIMCService {
                 .clasificacion(evaluacion.getClasificacion())
                 .fechaEvaluacion(evaluacion.getFechaEvaluacion())
                 .estado(evaluacion.getEstado())
+                .tipoEvaluacion("IMC")
                 .nombreEvaluador(evaluacion.getEvaluador().getNombres() + " " + evaluacion.getEvaluador().getApellidos())
                 .build();
     }

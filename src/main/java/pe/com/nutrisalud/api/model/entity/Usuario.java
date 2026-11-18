@@ -2,14 +2,7 @@ package pe.com.nutrisalud.api.model.entity;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -52,5 +45,9 @@ public class Usuario {
 	@CreationTimestamp
 	@Column(name = "fecha_creacion", updatable = false)
 	private LocalDateTime fechaCreacion;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "cargo_id", nullable = false) // nullable = false para obligar a asignar un cargo
+	private Cargo cargo;
 
 }

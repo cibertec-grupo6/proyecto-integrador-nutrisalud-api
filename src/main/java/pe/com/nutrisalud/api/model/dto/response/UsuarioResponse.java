@@ -20,4 +20,5 @@ public class UsuarioResponse {
     private Rol rol;
     private Boolean activo;
     private LocalDateTime fechaCreacion;
+    private String nombreCargo;
 }

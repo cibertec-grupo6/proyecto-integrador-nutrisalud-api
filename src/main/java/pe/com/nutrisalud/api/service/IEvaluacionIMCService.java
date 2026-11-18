@@ -5,4 +5,6 @@ import pe.com.nutrisalud.api.model.dto.response.EvaluacionIMCResponse;
 
 public interface IEvaluacionIMCService {
     EvaluacionIMCResponse registrarYCalcularIMC(EvaluacionIMCRequest evaluacionIMCRequest, String correoEvaluador);
+
+    EvaluacionIMCResponse aprobarEvaluacion(Long evaluacionId, String correoMedico);
 }

@@ -13,4 +13,6 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long>{
 	
 	// Metodo personalizado para verificar si un correo ya existe
 	boolean existsByCorreo(String correo);
+
+
 }

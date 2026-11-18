@@ -51,7 +51,7 @@ CREATE TABLE evaluacion_imc (
     peso_kg DECIMAL(5,2) NOT NULL,
     talla_m DECIMAL(4,2) NOT NULL,
     imc_calculado DECIMAL(5,2) NOT NULL,
-    clasificacion_imc VARCHAR(50) NOT NULL, -- Ej: 'Normal', 'Sobrepeso'
+    clasificacion VARCHAR(50) NOT NULL, -- Ej: 'Normal', 'Sobrepeso'
     fecha_evaluacion DATE NOT NULL,
     evaluador_id BIGINT, -- Quién hizo la evaluación (usuario del sistema)
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -68,7 +68,5 @@ INSERT INTO empresa (razon_social, ruc, sector, correo_contacto) VALUES
 ('Minera Las Bambas', '20504532109', 'Minería', 'rrhh@bambas.com'),
 ('Constructora Graña', '20100070970', 'Construcción', 'seguridad@grana.com');
 
-select * from usuario;
 
-USE nutrisalud_db;
-ALTER TABLE evaluacion_imc DROP COLUMN clasificacion;
+select * from evaluacion_imc;
