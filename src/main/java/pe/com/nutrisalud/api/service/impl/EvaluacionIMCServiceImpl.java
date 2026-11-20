@@ -14,8 +14,10 @@ import pe.com.nutrisalud.api.model.enums.Rol;
 import pe.com.nutrisalud.api.repository.IEvaluacionIMCRepository;
 import pe.com.nutrisalud.api.repository.ITrabajadorRepository;
 import pe.com.nutrisalud.api.repository.IUsuarioRepository;
+import pe.com.nutrisalud.api.service.EmailService;
 import pe.com.nutrisalud.api.service.IEvaluacionIMCService;
 import pe.com.nutrisalud.api.util.IMCCalculator;
+import pe.com.nutrisalud.api.util.PdfGeneratorService;
 
 import java.time.LocalDate;
 
@@ -26,6 +28,8 @@ public class EvaluacionIMCServiceImpl implements IEvaluacionIMCService {
     private final IEvaluacionIMCRepository evaluacionIMCRepo;
     private final ITrabajadorRepository trabajadorRepo;
     private final IUsuarioRepository usuarioRepo;
+    private final PdfGeneratorService pdfGeneratorService;
+    private final EmailService emailService;
 
     @Override
     public EvaluacionIMCResponse registrarYCalcularIMC(EvaluacionIMCRequest evaluacionIMCRequest, String correoEvaluador) {
@@ -62,11 +66,9 @@ public class EvaluacionIMCServiceImpl implements IEvaluacionIMCService {
 
     @Override
     public EvaluacionIMCResponse aprobarEvaluacion(Long evaluacionId, String correoMedico) {
-        // 1. Buscar la evaluación
         EvaluacionIMC evaluacion = evaluacionIMCRepo.findById(evaluacionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Evaluación no encontrada con ID: " + evaluacionId));
 
-        // 2. Validar que el usuario que aprueba sea un MÉDICO (Seguridad a nivel de negocio)
         Usuario medico = usuarioRepo.findByCorreo(correoMedico)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
@@ -74,16 +76,39 @@ public class EvaluacionIMCServiceImpl implements IEvaluacionIMCService {
             throw new IllegalStateException("Solo un usuario con rol MÉDICO puede aprobar evaluaciones.");
         }
 
-        // 3. Cambiar el estado a APROBADO
         evaluacion.setEstado(EstadoEvaluacion.APROBADO);
+        return mapToResponse(evaluacionIMCRepo.save(evaluacion));
+    }
 
-        // 4. Guardar los cambios
-        EvaluacionIMC evaluacionAprobada = evaluacionIMCRepo.save(evaluacion);
+    @Override
+    public EvaluacionIMCResponse enviarEvaluacion(Long evaluacionId, String correoMedico) {
+        EvaluacionIMC evaluacion = evaluacionIMCRepo.findById(evaluacionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evaluación no encontrada con ID: " + evaluacionId));
 
-        // TODO (Sprint 2): Aquí irá el disparador del servicio de envío de correos
-        // emailService.enviarResultadoIMC(evaluacionAprobada);
+        Usuario medico = usuarioRepo.findByCorreo(correoMedico)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        return mapToResponse(evaluacionAprobada);
+        if (medico.getRol() != Rol.MEDICO) {
+            throw new IllegalStateException("Solo un usuario con rol MÉDICO puede enviar evaluaciones.");
+        }
+        if (evaluacion.getEstado() != EstadoEvaluacion.APROBADO) {
+            throw new IllegalStateException("La evaluación debe estar APROBADA antes de poder enviarla.");
+        }
+        byte[] pdfBytes = pdfGeneratorService.generarPdfIMC(evaluacion);
+        String nombreArchivo = "Resultado_IMC_" + evaluacion.getTrabajador().getDocumentoIdentidad() + ".pdf";
+
+        // 2. Enviar el correo al trabajador
+        String asunto = "Resultado de su Evaluación Médica Ocupacional - NutriSalud";
+        String cuerpo = "<h3>Estimado/a " + evaluacion.getTrabajador().getNombres() + ",</h3>" +
+                "<p>Adjunto encontrará el resultado de su evaluación de IMC realizada el " + evaluacion.getFechaEvaluacion() + ".</p>" +
+                "<p>Atentamente,<br><b>Departamento de Salud Ocupacional - NutriSalud</b></p>";
+
+        emailService.enviarCorreoConPDF(evaluacion.getTrabajador().getCorreo(), asunto, cuerpo, nombreArchivo, pdfBytes);
+
+        // 3. Cambiar estado a ENVIADO
+        evaluacion.setEstado(EstadoEvaluacion.ENVIADO);
+
+        return mapToResponse(evaluacionIMCRepo.save(evaluacion));
     }
 
 
@@ -101,6 +126,7 @@ public class EvaluacionIMCServiceImpl implements IEvaluacionIMCService {
                 .estado(evaluacion.getEstado())
                 .tipoEvaluacion("IMC")
                 .nombreEvaluador(evaluacion.getEvaluador().getNombres() + " " + evaluacion.getEvaluador().getApellidos())
+                .cargoEvaluador(evaluacion.getEvaluador().getCargo().getNombre())
                 .build();
     }
 }

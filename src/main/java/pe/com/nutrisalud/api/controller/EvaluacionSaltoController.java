@@ -19,7 +19,7 @@ public class EvaluacionSaltoController {
     private final IEvaluacionSaltoService evaluacionSaltoService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENFERMERA')")
+    @PreAuthorize("hasRole('ENFERMERA')")
     public ResponseEntity<EvaluacionSaltoResponse> registrarEvaluacion(@Valid @RequestBody EvaluacionSaltoRequest request) {
         String correoEvaluador = SecurityContextHolder.getContext().getAuthentication().getName();
         EvaluacionSaltoResponse respuesta = evaluacionSaltoService.registrarYCalcularSalto(request, correoEvaluador);
@@ -32,5 +32,12 @@ public class EvaluacionSaltoController {
         String correoMedico = SecurityContextHolder.getContext().getAuthentication().getName();
         EvaluacionSaltoResponse respuesta = evaluacionSaltoService.aprobarEvaluacion(id, correoMedico);
         return ResponseEntity.ok(respuesta);
+    }
+
+    @PutMapping("/{id}/enviar")
+    @PreAuthorize("hasRole('MEDICO')")
+    public ResponseEntity<EvaluacionSaltoResponse> enviarEvaluacion(@PathVariable Long id) {
+        String correoMedico = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(evaluacionSaltoService.enviarEvaluacion(id, correoMedico));
     }
 }

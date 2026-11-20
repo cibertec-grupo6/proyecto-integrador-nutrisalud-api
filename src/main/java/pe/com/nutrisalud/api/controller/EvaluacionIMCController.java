@@ -21,13 +21,10 @@ public class EvaluacionIMCController {
     private final IEvaluacionIMCService evaluacionIMCService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENFERMERA')")
+    @PreAuthorize("hasAnyRole('ENFERMERA')")
     public ResponseEntity<EvaluacionIMCResponse> registrarEvaluacion(@Valid @RequestBody EvaluacionIMCRequest evaluacionIMCRequest){
 
-        // Extraer el correo del usuario logueado
         String correoEvaluador = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        // 2. Delegar toda la lógica de negocio (incluyendo buscar al usuario) al Service
         EvaluacionIMCResponse respuesta = evaluacionIMCService.registrarYCalcularIMC(evaluacionIMCRequest, correoEvaluador);
 
         return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
@@ -42,5 +39,12 @@ public class EvaluacionIMCController {
 
         EvaluacionIMCResponse respuesta = evaluacionIMCService.aprobarEvaluacion(id, correoMedico);
         return ResponseEntity.ok(respuesta);
+    }
+
+    @PutMapping("/{id}/enviar")
+    @PreAuthorize("hasRole('MEDICO')")
+    public ResponseEntity<EvaluacionIMCResponse> enviarEvaluacion(@PathVariable Long id) {
+        String correoMedico = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(evaluacionIMCService.enviarEvaluacion(id, correoMedico));
     }
 }

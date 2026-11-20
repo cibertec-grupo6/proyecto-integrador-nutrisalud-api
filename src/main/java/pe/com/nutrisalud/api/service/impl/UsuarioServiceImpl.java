@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import pe.com.nutrisalud.api.exception.ResourceNotFoundException;
 import pe.com.nutrisalud.api.model.dto.request.UsuarioRequest;
+import pe.com.nutrisalud.api.model.dto.response.PerfilUsuarioResponse;
 import pe.com.nutrisalud.api.model.dto.response.UsuarioResponse;
 import pe.com.nutrisalud.api.model.entity.Cargo;
 import pe.com.nutrisalud.api.model.entity.Usuario;
@@ -99,6 +100,23 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
 		usuario.setActivo(activo);
 		return mapToResponse(usuarioRepo.save(usuario));
+	}
+
+	@Override
+	public PerfilUsuarioResponse obtenerPerfilActual(String correo) {
+		Usuario usuario = usuarioRepo.findByCorreo(correo)
+				.orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el correo: " + correo));
+
+		return PerfilUsuarioResponse.builder()
+				.id(usuario.getId())
+				.nombres(usuario.getNombres())
+				.apellidos(usuario.getApellidos())
+				.correo(usuario.getCorreo())
+				.rol(usuario.getRol())
+				.nombreCargo(usuario.getCargo().getNombre()) // ← Aquí viene el cargo
+				.activo(usuario.getActivo())
+				.fechaCreacion(usuario.getFechaCreacion())
+				.build();
 	}
 
 	// Método auxiliar para mapear (agrégalo si no lo tienes)

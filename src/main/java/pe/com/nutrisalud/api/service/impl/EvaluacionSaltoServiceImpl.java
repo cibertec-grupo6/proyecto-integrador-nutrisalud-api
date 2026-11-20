@@ -14,7 +14,9 @@ import pe.com.nutrisalud.api.model.enums.Rol;
 import pe.com.nutrisalud.api.repository.IEvaluacionSaltoRepository;
 import pe.com.nutrisalud.api.repository.ITrabajadorRepository;
 import pe.com.nutrisalud.api.repository.IUsuarioRepository;
+import pe.com.nutrisalud.api.service.EmailService;
 import pe.com.nutrisalud.api.service.IEvaluacionSaltoService;
+import pe.com.nutrisalud.api.util.PdfGeneratorService;
 import pe.com.nutrisalud.api.util.SaltoVerticalCalculator;
 
 import java.time.LocalDate;
@@ -26,6 +28,8 @@ public class EvaluacionSaltoServiceImpl implements IEvaluacionSaltoService {
     private final IEvaluacionSaltoRepository evaluacionSaltoRepository;
     private final ITrabajadorRepository trabajadorRepository;
     private final IUsuarioRepository usuarioRepository;
+    private final PdfGeneratorService pdfGeneratorService;
+    private final EmailService emailService;
 
     @Override
     public EvaluacionSaltoResponse registrarYCalcularSalto(EvaluacionSaltoRequest request, String correoEvaluador) {
@@ -71,6 +75,42 @@ public class EvaluacionSaltoServiceImpl implements IEvaluacionSaltoService {
         }
 
         evaluacion.setEstado(EstadoEvaluacion.APROBADO);
+        return mapToResponse(evaluacionSaltoRepository.save(evaluacion));
+    }
+
+    @Override
+    public EvaluacionSaltoResponse enviarEvaluacion(Long evaluacionId, String correoMedico) {
+        EvaluacionSalto evaluacion = evaluacionSaltoRepository.findById(evaluacionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evaluación de salto no encontrada con ID: " + evaluacionId));
+
+        Usuario medico = usuarioRepository.findByCorreo(correoMedico)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        if (medico.getRol() != Rol.MEDICO) {
+            throw new IllegalStateException("Solo un usuario con rol MÉDICO puede enviar evaluaciones.");
+        }
+
+        // Validación de seguridad: No se puede enviar si no está aprobado primero
+        if (evaluacion.getEstado() != EstadoEvaluacion.APROBADO) {
+            throw new IllegalStateException("La evaluación debe estar APROBADA antes de poder enviarla.");
+        }
+
+        // 1. Generar el PDF en memoria
+        byte[] pdfBytes = pdfGeneratorService.generarPdfSaltoVertical(evaluacion);
+        String nombreArchivo = "Resultado_SaltoVertical_" + evaluacion.getTrabajador().getDocumentoIdentidad() + ".pdf";
+
+        // 2. Enviar el correo al trabajador
+        String asunto = "Resultado de su Evaluación Física (Salto Vertical) - NutriSalud";
+        String cuerpo = "<h3>Estimado/a " + evaluacion.getTrabajador().getNombres() + ",</h3>" +
+                "<p>Adjunto encontrará el resultado de su prueba de Salto Vertical (Test de Sargent) realizada el " + evaluacion.getFechaEvaluacion() + ".</p>" +
+                "<p>Su altura de salto fue de <b>" + evaluacion.getAlturaSaltoCm() + " cm</b>, con una clasificación de <b>" + evaluacion.getClasificacionRendimiento().name().replace('_', ' ') + "</b>.</p>" +
+                "<p>Atentamente,<br><b>Departamento de Salud Ocupacional - NutriSalud</b></p>";
+
+        emailService.enviarCorreoConPDF(evaluacion.getTrabajador().getCorreo(), asunto, cuerpo, nombreArchivo, pdfBytes);
+
+        // 3. Cambiar estado a ENVIADO
+        evaluacion.setEstado(EstadoEvaluacion.ENVIADO);
+
         return mapToResponse(evaluacionSaltoRepository.save(evaluacion));
     }
 

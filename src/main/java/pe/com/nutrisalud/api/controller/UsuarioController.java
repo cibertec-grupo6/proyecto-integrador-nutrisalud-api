@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import pe.com.nutrisalud.api.model.dto.request.CambiarPasswordRequest;
 import pe.com.nutrisalud.api.model.dto.request.ResetPasswordRequest;
 import pe.com.nutrisalud.api.model.dto.request.UsuarioRequest;
+import pe.com.nutrisalud.api.model.dto.response.PerfilUsuarioResponse;
 import pe.com.nutrisalud.api.model.dto.response.UsuarioResponse;
 import pe.com.nutrisalud.api.service.IUsuarioService;
 
@@ -65,6 +66,13 @@ public class UsuarioController {
     public ResponseEntity<String> resetearPassword(@PathVariable Long id, @Valid @RequestBody ResetPasswordRequest request) {
         usuarioService.resetearPasswordPorAdmin(id, request.getNuevaPassword());
         return ResponseEntity.ok("Contraseña del usuario reseteada exitosamente");
+    }
+
+    @GetMapping("/perfil")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<PerfilUsuarioResponse> obtenerMiPerfil() {
+        String correo = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(usuarioService.obtenerPerfilActual(correo));
     }
 
 }
